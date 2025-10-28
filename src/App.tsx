@@ -4,7 +4,7 @@ import imgRectangle2 from "figma:asset/dc7d0035fd5cce1df3621859e490d9db68e1f23e.
 import { PFPFramePreview } from "./components/PFPFramePreview";
 import { PFPFrameGenerator } from "./components/PFPFrameGenerator";
 import { Volume2, VolumeX, Timer, Sparkles } from "lucide-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { projectId, publicAnonKey } from "./utils/supabase/info";
 
