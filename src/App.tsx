@@ -445,7 +445,7 @@ export default function App() {
 useEffect(() => {
   const playAudio = async () => {
     if (audioRef.current) {
-      audioRef.current.volume = 0.3;
+      audioRef.current.volume = 0.1;
       try {
         await audioRef.current.play();
           setIsMuted(false);
