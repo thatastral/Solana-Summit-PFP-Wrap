@@ -441,14 +441,13 @@ export default function App() {
 
     fetchFrameCount();
   }, []);
-
-  // Audio autoplay effect
-  useEffect(() => {
-    const playAudio = async () => {
-      if (audioRef.current) {
-        audioRef.current.volume = 0.7;
-        try {
-          await audioRef.current.play();
+ // Audio autoplay effect
+useEffect(() => {
+  const playAudio = async () => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.3;
+      try {
+        await audioRef.current.play();
           setIsMuted(false);
         } catch (error) {
           console.log("Autoplay prevented:", error);
