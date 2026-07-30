@@ -1,0 +1,124 @@
+.upload-details {
+  position: relative;
+  z-index: 2;
+  width: min(420px, 92vw);
+  margin: 48px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 28px 36px;
+  background: rgba(207, 255, 246, 0.04);
+  border: 1px solid rgba(137, 222, 102, 0.18);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(6px);
+}
+
+.upload-details__back {
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+  transition: color var(--dur-base) var(--ease-out);
+}
+
+.upload-details__back:hover {
+  color: var(--color-white);
+}
+
+.upload-details__photo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.upload-details__photo {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--color-green);
+  box-shadow: var(--shadow-glow-green);
+}
+
+.upload-details__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-details__change {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-green);
+}
+
+.upload-details__change:hover {
+  text-decoration: underline;
+}
+
+.upload-details__title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: var(--color-white);
+  margin-bottom: 6px;
+}
+
+.upload-details__subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+
+.upload-details__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin-bottom: 28px;
+}
+
+.upload-details__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.upload-details__field span {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.upload-details__field input {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: border-color var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
+}
+
+.upload-details__field input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.upload-details__field input:focus {
+  outline: none;
+  border-color: var(--color-green);
+  background: rgba(137, 222, 102, 0.06);
+}
+
+.upload-details__submit {
+  width: 100%;
+}

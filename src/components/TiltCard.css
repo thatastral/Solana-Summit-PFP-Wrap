@@ -1,0 +1,13 @@
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}

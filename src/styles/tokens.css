@@ -1,0 +1,54 @@
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap");
+@import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
+
+/*
+  Font note: the Figma source specifies "Calendas Plus" for display copy.
+  It isn't available on a free CDN, so Instrument Serif is used as the
+  closest-matching elegant display serif. Swap --font-display below if a
+  licensed Calendas Plus webfont becomes available.
+*/
+
+:root {
+  /* Brand palette (exact values pulled from Figma node 2017:195817 / 2018:245286) */
+  --color-bg: #023a50;
+  --color-bg-deep: #012431;
+  --color-pattern: #072a37;
+  --color-green: #89de66;
+  --color-green-bright: #95f26e;
+  --color-green-ink: #012e26;
+  --color-mint: #cbfff6;
+  --color-white: #ffffff;
+  --color-ink: #023a50;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.72);
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+
+  --font-display: "Instrument Serif", "Calendas Plus", Georgia, serif;
+  --font-body: "General Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --radius-pill: 999px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+
+  --shadow-card: 0px 24px 60px rgba(1, 10, 15, 0.55);
+  --shadow-glow-green: 0px 0px 40px rgba(137, 222, 102, 0.35);
+
+  /* Easing curves (emil-design-eng: stronger than default CSS easings) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --dur-fast: 160ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+  }
+}
