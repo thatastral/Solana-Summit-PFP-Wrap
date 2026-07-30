@@ -1,11 +1,12 @@
 import { getCoverCropRect, loadImage, type FocalPoint } from "./faceCrop";
-import ringTextUrl from "../assets/2026/pfp-ring-text.svg";
+import wrapPngUrl from "../assets/2026/pfp-wrap.png";
 
 // Same technique as the 2025 PFPFrameGenerator: fill the circle, cover-fit
-// the photo into it, then stamp a pre-rendered ring+text overlay on top and
-// finish with a multiply-blend inner shadow. Only the colors changed.
-const SIZE = 400;
-const RING_PNG_SIZE = 433; // overlay is authored slightly larger than the circle, like the original asset
+// the photo into it, then stamp the wrap overlay on top and finish with a
+// multiply-blend inner shadow + white border. The wrap element itself is
+// swapped for the new "Attending Solana Summit Nigeria" artwork.
+const SIZE = 486; // matches the wrap artwork's native resolution 1:1, no upscaling
+const BORDER_WIDTH = 5;
 
 export async function generatePfp(
   photo: HTMLImageElement,
@@ -34,14 +35,13 @@ export async function generatePfp(
   ctx.drawImage(photo, sx, sy, size, size, 0, 0, SIZE, SIZE);
   ctx.restore();
 
-  // Ring + circular text overlay
-  const ringImage = await loadImage(ringTextUrl);
+  // Wrap overlay (the "Attending Solana Summit Nigeria" ring artwork)
+  const wrapImage = await loadImage(wrapPngUrl);
   ctx.save();
   ctx.beginPath();
   ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2);
   ctx.clip();
-  const offset = (SIZE - RING_PNG_SIZE) / 2;
-  ctx.drawImage(ringImage, offset, offset, RING_PNG_SIZE, RING_PNG_SIZE);
+  ctx.drawImage(wrapImage, 0, 0, SIZE, SIZE);
   ctx.restore();
 
   // Inner shadow (was rgba(76,168,207,*))
@@ -62,6 +62,15 @@ export async function generatePfp(
   ctx.beginPath();
   ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+
+  // White border ring, matching the target reference
+  ctx.save();
+  ctx.lineWidth = BORDER_WIDTH;
+  ctx.strokeStyle = "#ffffff";
+  ctx.beginPath();
+  ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2 - BORDER_WIDTH / 2, 0, Math.PI * 2);
+  ctx.stroke();
   ctx.restore();
 
   return canvas.toDataURL("image/png", 1.0);

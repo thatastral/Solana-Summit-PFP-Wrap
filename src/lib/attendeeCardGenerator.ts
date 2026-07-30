@@ -172,11 +172,14 @@ export async function generateAttendeeCard({
   ctx.translate(badgeCx, badgeCy);
   ctx.rotate((-14.18 * Math.PI) / 180);
 
+  // Drop shadow only -- the PFP image already has its own baked-in white
+  // border, so this backing circle stays the same size as the badge itself
+  // rather than adding a second visible ring.
   ctx.save();
   ctx.shadowColor = "rgba(0, 24, 34, 0.45)";
   ctx.shadowBlur = SIZE * 0.025;
   ctx.beginPath();
-  ctx.arc(0, 0, badgeSize / 2 + SIZE * 0.006, 0, Math.PI * 2);
+  ctx.arc(0, 0, badgeSize / 2, 0, Math.PI * 2);
   ctx.fillStyle = "#fff";
   ctx.fill();
   ctx.restore();
