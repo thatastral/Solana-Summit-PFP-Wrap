@@ -12,12 +12,30 @@ body {
   padding: 0;
 }
 
+/*
+  The experience is a fixed single fold on every device -- nothing is ever
+  meant to scroll, so the document itself is locked rather than relying on
+  content simply happening to fit.
+*/
+html,
+body,
+/* The mount point needs an explicit height too, or `height: 100%` on the
+   shell below resolves against auto and collapses to its content. */
+#root {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 body {
   background: var(--color-bg);
   color: var(--color-text-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  position: fixed;
+  inset: 0;
+  width: 100%;
 }
 
 img,
@@ -46,6 +64,70 @@ p {
   margin: 0;
 }
 
+/* Consistent, visible focus for keyboard users only. */
+:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/*
+  The whole experience is designed to sit on one fold: the shell owns the
+  viewport height and the middle section flexes, so the banner stays at the
+  top and the footer at the bottom without anyone needing to scroll.
+  `dvh` keeps it honest on mobile browsers with collapsing toolbars.
+*/
+.app-shell {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/*
+  Top-anchored rather than centred, so the gap between the banner and the
+  first line of content is a deliberate, measurable value instead of a
+  by-product of how tall the content happens to be.
+*/
+.app-shell__main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+  padding: var(--space-lede) 20px var(--space-block);
+}
+
+/* The result screen has no banner above it, so it re-centres instead. */
+.app-shell__main--centered {
+  align-items: center;
+  padding-top: var(--space-block);
+}
+
+/*
+  On a phone the faces strip is pinned near the footer rather than sitting in
+  the flow, so the remaining group -- timer, headline, subcopy, CTA -- centres
+  itself in the space between the banner and that strip.
+*/
+@media (max-width: 700px) {
+  .app-shell__main {
+    align-items: center;
+    padding-top: var(--space-block);
+  }
+
+  /*
+    No reserved space at the bottom. The faces strip is pinned out of flow
+    and the footer already occupies the lower band in flow, so the banner
+    above and the footer below very nearly balance -- letting the group
+    centre on the viewport on its own. Padding here would double-count the
+    footer and push the group upward.
+  */
+  .app-shell__main:not(.app-shell__main--centered) {
+    padding-bottom: 0;
+  }
+}
+
 /* ---------- Shared primitives ---------- */
 
 .btn {
@@ -59,16 +141,20 @@ p {
   font-size: 18px;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
   white-space: nowrap;
+  /* Named properties only -- never `all`. */
+  transition: transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
 }
 
-.btn:active {
+.btn:active:not(:disabled) {
   transform: scale(0.97);
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
@@ -77,6 +163,7 @@ p {
   color: var(--color-ink);
 }
 
+/* Colour shift only on hover -- no glow. */
 @media (hover: hover) and (pointer: fine) {
   .btn-primary:hover:not(:disabled) {
     background: var(--color-green-bright);
@@ -96,24 +183,6 @@ p {
     border-color: var(--color-green);
     background: rgba(137, 222, 102, 0.08);
   }
-}
-
-.stat-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(137, 222, 102, 0.12);
-  border: 1px solid rgba(137, 222, 102, 0.18);
-  border-radius: var(--radius-pill);
-  padding: 8px 16px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.stat-pill strong {
-  color: var(--color-green);
-  font-weight: 600;
 }
 
 .visually-hidden {

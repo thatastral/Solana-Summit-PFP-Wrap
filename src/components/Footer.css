@@ -3,29 +3,55 @@
   z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 24px clamp(20px, 6vw, 64px) 40px;
+  justify-content: center;
+  padding: var(--space-block) clamp(20px, 5vw, 64px);
+  /* Lifted off the bottom edge a touch. */
+  padding-bottom: clamp(20px, 5.4vh, 64px);
+  flex-shrink: 0;
 }
 
-.site-footer__logo {
-  width: 130px;
-  height: auto;
-}
-
+/* "Powered by Superteam" scales as one lockup (source ratio 250.82:16.81). */
 .site-footer__credit {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
+  width: 200px;
+  height: 13.4px;
+  flex-shrink: 0;
+}
+
+.site-footer__credit span {
   font-family: var(--font-body);
   font-weight: 600;
   font-style: italic;
   font-size: 16px;
-  color: var(--color-green-bright);
+  line-height: 1;
+  color: var(--color-white);
+  white-space: nowrap;
 }
 
+/* The source mark is green; this drives it to flat white to match the
+   wordmark beside it. */
 .site-footer__superteam {
-  width: 100px;
-  height: auto;
+  width: 108.8px;
+  height: 13.4px;
+  flex-shrink: 0;
+  filter: brightness(0) invert(1);
+}
+
+@media (max-height: 720px), (max-width: 900px) {
+  .site-footer__credit {
+    width: 172px;
+    height: 11.5px;
+  }
+
+  .site-footer__credit span {
+    font-size: 14px;
+  }
+
+  .site-footer__superteam {
+    width: 93.6px;
+    height: 11.5px;
+  }
 }

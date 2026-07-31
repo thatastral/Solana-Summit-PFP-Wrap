@@ -1,9 +1,17 @@
-// TODO(confirm before launch): swap in the real 2026 registration link.
-export const REGISTER_URL = "https://luma.com/solana-summit-nigeria-2026";
+export const REGISTER_URL = "https://luma.com/Solana-Summit-Nigeria";
 
-// TODO(confirm before launch): swap in the real 2026 event date/time.
-export const EVENT_DATE = "2026-03-05T09:00:00";
+// Summit starts August 8th, 9AM prompt.
+export const EVENT_DATE = "2026-08-08T09:00:00";
 
 export const EVENT_NAME = "Solana Summit Nigeria";
 
 export const SUPABASE_FUNCTION_BASE = "make-server-07da931a";
+
+/**
+ * Local/preview testing must not pollute the public download count. Only
+ * real visitors on the deployed site are counted.
+ */
+export const IS_PRODUCTION =
+  typeof window !== "undefined" &&
+  !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname) &&
+  !window.location.hostname.endsWith(".local");

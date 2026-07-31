@@ -4,92 +4,251 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px 64px;
+  width: 100%;
 }
 
-.result__eyebrow {
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.result__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/*
+  Desktop: the flanking copy is pinned to the bottom corners of the viewport
+  rather than sitting beside the card. One inset drives left, right and
+  bottom, so the margin off the sides and off the bottom always match.
+  Fixed rather than absolute because the page never scrolls, so this is
+  measured against the viewport itself.
+*/
+.result {
+  --result-inset: 120px;
+}
+
+.result__aside {
+  position: fixed;
+  bottom: var(--result-inset);
+  max-width: 300px;
+  z-index: 3;
+}
+
+.result__aside--left {
+  left: var(--result-inset);
+  text-align: left;
+}
+
+.result__aside--right {
+  right: var(--result-inset);
+  text-align: right;
+}
+
+.result__aside-lead {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--color-green);
-  margin-bottom: 24px;
 }
 
+.result__aside-sub {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--color-white);
+  margin-top: 8px;
+}
+
+/*
+  Envelope reveal stage. The component renders a fixed 980x1100 scene and
+  scales it to fit, so this box only has to supply the right aspect ratio
+  and stay inside the fold -- height leads, width follows from 980/1100.
+*/
 .result__stage {
   position: relative;
-  width: min(430px, 88vw);
+  flex: 0 0 auto;
+  height: min(68vh, 600px);
+  width: calc(min(68vh, 600px) * 0.8909);
+  max-width: 60vw;
 }
 
-.result__card {
+.result__stage > * {
   width: 100%;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
+  height: 100%;
 }
 
-.result__card img {
-  width: 100%;
-  height: auto;
-  display: block;
+/*
+  The component clips to its own box by default, which existed to contain the
+  ambient glow -- and that is switched off here. Without it the envelope can
+  travel and spin outside the stage during its entrance without ever being
+  cut off at the edge.
+*/
+.result__stage .envr-root {
+  overflow: visible;
 }
 
-.result__pfp {
-  position: absolute;
-  right: -6%;
-  bottom: -10%;
-  width: 34%;
+/*
+  Cast shadow for the card. `drop-shadow` follows the card's alpha silhouette
+  -- including its rounded corners -- where a box-shadow would trace the
+  element's rectangle. The card is 700 wide inside a 788 clip, so there is
+  44px of clearance either side; keeping blur + offset inside that budget
+  means the shadow falls off naturally instead of being sliced by the clip.
+*/
+.result__stage .envr-card-img {
+  filter: drop-shadow(0 12px 22px rgba(0, 14, 20, 0.42));
 }
 
-.result__pfp-tilt {
+/*
+  Matching white edges on the card and badge -- presentation only, so the
+  downloaded PNGs stay borderless.
+
+  `outline` with a negative offset rather than an inset box-shadow: on a
+  replaced element like <img>, the image content paints over an inset
+  shadow, so it never shows. Outlines paint above content and follow
+  border-radius, so the ring is visible on both the rounded card and the
+  circular badge.
+*/
+.result__stage .envr-card-img,
+.result__stage .envr-pfp-img {
+  outline: 4px solid rgba(255, 255, 255, 0.94);
+  /* Sits just outside the artwork edge rather than eating into it. */
+  outline-offset: 1px;
+}
+
+.result__stage .envr-pfp-img {
   border-radius: 50%;
-  overflow: hidden;
-  /* No CSS border here -- the white ring is already baked into the
-     generated PFP image itself, so preview and download match exactly. */
-  box-shadow: 0 0 0 6px rgba(137, 222, 102, 0.18), var(--shadow-card);
 }
 
-.result__pfp-tilt img {
-  width: 100%;
-  height: auto;
-  display: block;
+/* The composition carries its own depth; the green bloom behind the
+   envelope and badge is removed entirely. */
+.result__stage .envr-ambient,
+.result__stage .envr-pfp-glow {
+  display: none;
+}
+
+/* The badge's own rule carries a green halo in its box-shadow as well as
+   the animated glow layer above, so that is cleared too -- the white ring
+   comes from the shared outline rule instead. */
+.result__stage .envr-pfp-img {
+  box-shadow: none;
 }
 
 .result__actions {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  margin-top: 56px;
+  /* Tucked up close under the card. */
+  margin-top: 16px;
 }
 
-.result__secondary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--color-text-muted);
+/* Body face here rather than the display serif the shared .btn defaults to. */
+.result__actions .btn {
   font-family: var(--font-body);
-  font-size: 14px;
-}
-
-.result__link {
-  color: var(--color-text-secondary);
-  transition: color var(--dur-base) var(--ease-out);
-}
-
-.result__link:hover {
-  color: var(--color-green);
+  font-weight: 500;
+  font-size: 18px;
 }
 
 .result__reset {
   font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--color-text-muted);
-  margin-top: 4px;
+  font-size: 14px;
+  color: var(--color-white);
+  padding-top: 24px;
   transition: color var(--dur-base) var(--ease-out);
 }
 
-.result__reset:hover {
-  color: var(--color-white);
+@media (hover: hover) and (pointer: fine) {
+  .result__reset:hover {
+    color: var(--color-green);
+  }
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1200px) {
+  .result__aside {
+    max-width: 240px;
+  }
+
+  .result__aside-lead {
+    font-size: 20px;
+  }
+
+  .result__aside-sub {
+    font-size: 14px;
+  }
+}
+
+/*
+  Phone: pinning to the corners would collide with the card, so the copy
+  returns to the flow -- above and below the composition.
+*/
+@media (max-width: 900px) {
+  /*
+    The envelope scene is laid out inside a fixed 980x1100 box and scaled to
+    fit, which leaves a band of transparent padding above and below the
+    artwork. That padding is already part of the visual gap, so the flow gap
+    is set small and the button's margin adds it back -- otherwise the two
+    text gaps read far wider than the gap down to the button.
+  */
+  .result {
+    --result-gap: 8px;
+    --result-stage-pad: 20px;
+  }
+
+  .result__row {
+    flex-direction: column;
+    gap: var(--result-gap);
+  }
+
+  .result__aside {
+    position: static;
+    max-width: none;
+    text-align: center;
+  }
+
+  .result__aside--left,
+  .result__aside--right {
+    text-align: center;
+  }
+
+  .result__aside--right {
+    order: 3;
+  }
+
+  .result__aside-lead {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+
+  .result__aside-sub {
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .result__stage {
+    height: min(46vh, 420px);
+    width: calc(min(46vh, 420px) * 0.8909);
+    max-width: 76vw;
+  }
+
+  .result__actions {
+    margin-top: calc(var(--result-gap) + var(--result-stage-pad));
+  }
+
+  .result__reset {
+    padding-top: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  .result__actions .btn {
+    height: 40px;
+    font-size: 15px;
+    padding: 0 24px;
+  }
+
+  .result__stage {
+    height: min(42vh, 380px);
+    width: calc(min(42vh, 380px) * 0.8909);
+    max-width: 82vw;
+  }
 }

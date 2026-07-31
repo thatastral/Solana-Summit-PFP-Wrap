@@ -12,10 +12,10 @@
 
 .intro__pattern {
   position: absolute;
-  top: -20%;
-  left: -20%;
-  width: 140%;
-  height: 140%;
+  top: -40%;
+  left: -40%;
+  width: 180%;
+  height: 180%;
   background-image: url("../assets/2026/pattern-diamond-tile.svg");
   background-repeat: repeat;
   background-size: 26px 52px;

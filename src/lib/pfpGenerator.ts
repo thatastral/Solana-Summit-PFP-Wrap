@@ -3,10 +3,13 @@ import wrapPngUrl from "../assets/2026/pfp-wrap.png";
 
 // Same technique as the 2025 PFPFrameGenerator: fill the circle, cover-fit
 // the photo into it, then stamp the wrap overlay on top and finish with a
-// multiply-blend inner shadow + white border. The wrap element itself is
-// swapped for the new "Attending Solana Summit Nigeria" artwork.
-const SIZE = 486; // matches the wrap artwork's native resolution 1:1, no upscaling
-const BORDER_WIDTH = 5;
+// multiply-blend inner shadow. The wrap element itself is swapped for the new
+// "Attending Solana Summit Nigeria" artwork.
+//
+// 1080 is the standard avatar export size; the wrap art is 486 native, so it
+// is the limiting factor on ring sharpness while the user's photo benefits
+// from the full resolution.
+const SIZE = 1080;
 
 export async function generatePfp(
   photo: HTMLImageElement,
@@ -16,6 +19,8 @@ export async function generatePfp(
   canvas.width = SIZE;
   canvas.height = SIZE;
   const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
 
   await document.fonts.ready;
 
@@ -35,13 +40,22 @@ export async function generatePfp(
   ctx.drawImage(photo, sx, sy, size, size, 0, 0, SIZE, SIZE);
   ctx.restore();
 
-  // Wrap overlay (the "Attending Solana Summit Nigeria" ring artwork)
+  /*
+    Wrap overlay. The source art sits inset within its canvas (its ring
+    only spans ~75% of the radius), so it is scaled up until the ring meets
+    the circle's circumference -- the LinkedIn "#Hiring" treatment, where
+    the band hugs the very edge of the avatar.
+  */
   const wrapImage = await loadImage(wrapPngUrl);
+  const WRAP_SCALE = 1.335;
+  const wrapSize = SIZE * WRAP_SCALE;
+  const wrapOffset = (SIZE - wrapSize) / 2;
+
   ctx.save();
   ctx.beginPath();
   ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2, 0, Math.PI * 2);
   ctx.clip();
-  ctx.drawImage(wrapImage, 0, 0, SIZE, SIZE);
+  ctx.drawImage(wrapImage, wrapOffset, wrapOffset, wrapSize, wrapSize);
   ctx.restore();
 
   // Inner shadow (was rgba(76,168,207,*))
@@ -50,7 +64,7 @@ export async function generatePfp(
   const shadowGradient = ctx.createRadialGradient(
     SIZE / 2,
     SIZE / 2,
-    SIZE / 2 - 30,
+    SIZE / 2 - SIZE * 0.062,
     SIZE / 2,
     SIZE / 2,
     SIZE / 2,
@@ -64,14 +78,8 @@ export async function generatePfp(
   ctx.fill();
   ctx.restore();
 
-  // White border ring, matching the target reference
-  ctx.save();
-  ctx.lineWidth = BORDER_WIDTH;
-  ctx.strokeStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.arc(SIZE / 2, SIZE / 2, SIZE / 2 - BORDER_WIDTH / 2, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
+  /* No border baked in -- the white ring is a presentation detail applied on
+     screen, so the exported avatar stays clean against any backdrop. */
 
   return canvas.toDataURL("image/png", 1.0);
 }

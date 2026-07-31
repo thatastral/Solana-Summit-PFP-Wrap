@@ -1,21 +1,29 @@
 .announcement {
+  position: relative;
+  /* Sits above the ambient background so the pattern never shows through
+     the solid green fills, and above the upload scrim so it stays crisp
+     while the rest of the page is blurred back. */
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 40px 16px 0;
+  padding: var(--space-block) 16px 0;
+  flex-shrink: 0;
 }
 
+/* Dialled back from the original 58px/18px so the banner reads as a quiet
+   utility strip rather than the loudest thing on the page. */
 .announcement__cap {
-  width: 32px;
-  height: 58px;
+  width: 22px;
+  height: 44px;
   border-radius: var(--radius-pill);
   background: var(--color-green);
   flex-shrink: 0;
   display: none;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 760px) {
   .announcement__cap {
     display: block;
   }
@@ -24,17 +32,18 @@
 .announcement__pill {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: var(--color-green);
   border-radius: var(--radius-pill);
-  height: 58px;
-  padding: 0 8px 0 24px;
+  height: 44px;
+  padding: 0 6px 0 20px;
   max-width: 100%;
 }
 
 .announcement__pill p {
-  font-family: var(--font-display);
-  font-size: clamp(13px, 2.6vw, 17px);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
   color: var(--color-ink);
   letter-spacing: -0.01em;
   white-space: nowrap;
@@ -46,9 +55,10 @@
   flex-shrink: 0;
   background: var(--color-bg);
   color: var(--color-green);
-  font-family: var(--font-display);
-  font-size: clamp(12px, 2.2vw, 14.5px);
-  padding: 11px 20px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 9px 16px;
   border-radius: var(--radius-pill);
   transition: background-color var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
@@ -60,5 +70,35 @@
 @media (hover: hover) and (pointer: fine) {
   .announcement__register:hover {
     background: var(--color-bg-deep);
+  }
+}
+
+@media (max-height: 720px) {
+  .announcement__pill,
+  .announcement__cap {
+    height: 40px;
+  }
+}
+
+@media (max-width: 560px) {
+  .announcement__pill p {
+    font-size: 13px;
+  }
+
+  .announcement__pill {
+    padding-left: 14px;
+    height: 40px;
+    gap: 8px;
+  }
+
+  .announcement__register {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .announcement__pill p {
+    font-size: 12px;
   }
 }

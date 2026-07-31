@@ -2,79 +2,24 @@
   position: fixed;
   inset: 0;
   z-index: 900;
-  background: var(--color-bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-}
-
-.gen-overlay__mark {
-  position: relative;
-  width: 72px;
-  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.gen-overlay__mark img {
-  width: 40px;
-  height: auto;
-}
-
-.gen-overlay__ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid rgba(137, 222, 102, 0.35);
-}
-
-.gen-overlay__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  font-family: var(--font-body);
-  font-size: 15px;
+  padding: 24px;
+  /* Same frosted treatment as the upload modal's backdrop. */
+  background: rgba(1, 43, 60, 0.14);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .gen-overlay__step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--color-text-muted);
-  transition: color var(--dur-slow) var(--ease-out);
-}
-
-.gen-overlay__step--active {
-  color: var(--color-white);
-}
-
-.gen-overlay__step--done {
-  color: var(--color-green);
-}
-
-.gen-overlay__dot {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1.5px solid currentColor;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-
-.gen-overlay__step--active .gen-overlay__dot {
-  animation: gen-pulse 1s ease-in-out infinite;
-}
-
-@keyframes gen-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.25); }
-  50% { box-shadow: 0 0 0 5px rgba(255, 255, 255, 0); }
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: clamp(15px, 1.5vw, 18px);
+  line-height: 1.35;
+  /* Opacity is animated by Motion (rests at 0.8); this is the
+     no-JS/reduced-motion fallback. */
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  white-space: nowrap;
 }

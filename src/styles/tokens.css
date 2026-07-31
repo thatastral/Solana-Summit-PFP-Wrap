@@ -1,12 +1,14 @@
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap");
 @import url("https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap");
 
-/*
-  Font note: the Figma source specifies "Calendas Plus" for display copy.
-  It isn't available on a free CDN, so Instrument Serif is used as the
-  closest-matching elegant display serif. Swap --font-display below if a
-  licensed Calendas Plus webfont becomes available.
-*/
+/* Calendas Plus -- licensed display serif, self-hosted from src/assets/fonts. */
+@font-face {
+  font-family: "Calendas Plus";
+  src: url("../assets/fonts/calendas_plus-webfont.woff2") format("woff2"),
+       url("../assets/fonts/calendas_plus-webfont.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   /* Brand palette (exact values pulled from Figma node 2017:195817 / 2018:245286) */
@@ -24,13 +26,41 @@
   --color-text-secondary: rgba(255, 255, 255, 0.72);
   --color-text-muted: rgba(255, 255, 255, 0.5);
 
-  --font-display: "Instrument Serif", "Calendas Plus", Georgia, serif;
+  --font-display: "Calendas Plus", Georgia, serif;
   --font-body: "General Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
   --radius-pill: 999px;
-  --radius-lg: 24px;
+  --radius-lg: 32px;
   --radius-md: 16px;
   --radius-sm: 10px;
+
+  /*
+    Fluid scale keyed to viewport *height* as well as width, so the layout
+    keeps its proportions on a short laptop screen instead of overflowing
+    the fold. Values track the design at 1440x960 and shrink gracefully.
+  */
+  --space-block: clamp(18px, 3.4vh, 44px);
+  /* Height of the top announcement frame -- used to sit the modal just
+     below it. Kept in sync with the banner's own responsive heights. */
+  --banner-h: 44px;
+
+  /*
+    Side pattern geometry, per the design: each band is 306.1 x 1260.84,
+    the pair sits 1092px apart (so 546px either side of centre) and is
+    centred on both axes.
+  */
+  --band-w: 306.1px;
+  --band-h: 1260.84px;
+  --band-inner: 546px;
+  /* Banner -> first line of content. Targets ~150px on a standard desktop
+     viewport and eases down on short screens to protect the fold. */
+  --space-lede: clamp(76px, 15.6vh, 164px);
+  --space-stack-sm: clamp(10px, 1.6vh, 18px);
+  --space-stack: clamp(18px, 3.6vh, 38px);
+  --space-stack-lg: clamp(26px, 5.4vh, 60px);
+
+  --text-hero: clamp(34px, min(5.8vw, 8.6vh), 64px);
+  --text-sub: clamp(16px, min(2vw, 3vh), 22px);
 
   --shadow-card: 0px 24px 60px rgba(1, 10, 15, 0.55);
   --shadow-glow-green: 0px 0px 40px rgba(137, 222, 102, 0.35);
@@ -43,6 +73,23 @@
   --dur-fast: 160ms;
   --dur-base: 220ms;
   --dur-slow: 420ms;
+}
+
+/* Short viewports: everything must still fit one fold, so the generous
+   vertical rhythm compresses rather than pushing content out of view. */
+@media (max-height: 700px) {
+  :root {
+    --space-lede: clamp(36px, 8vh, 64px);
+    --space-block: clamp(14px, 2.4vh, 28px);
+    --space-stack-lg: clamp(18px, 3.4vh, 34px);
+  }
+}
+
+/* Matches the banner's shorter heights at these breakpoints. */
+@media (max-height: 720px), (max-width: 560px) {
+  :root {
+    --banner-h: 40px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

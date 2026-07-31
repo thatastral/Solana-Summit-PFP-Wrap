@@ -14,44 +14,114 @@
   background-size: 14px 28px;
 }
 
-.pattern-bg .pattern-band {
+/*
+  Frosted layer on the result screen: same treatment as the upload modal's
+  backdrop, pushing the pattern behind it. Sits under the rays in DOM order
+  so the burst paints on top and stays sharp.
+*/
+.pattern-bg__frost {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: clamp(70px, 9vw, 110px);
-  background-image: url("../assets/2026/side-patterns.svg");
-  background-repeat: repeat-y;
-  background-size: 100% auto;
+  inset: 0;
+  background: rgba(1, 43, 60, 0.14);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-.pattern-band--left {
-  left: 0;
-  mask-image: linear-gradient(to right, black 60%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 60%, transparent 100%);
-}
-
-.pattern-band--right {
-  right: 0;
-  transform: scaleX(-1);
-  mask-image: linear-gradient(to right, black 60%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 60%, transparent 100%);
-}
-
-.pattern-bg__sunburst {
+/*
+  Ray burst -- result screen only. Square so rotation stays perfectly
+  concentric, and centred with a translate rather than margin maths so it
+  holds its centre at every viewport size.
+*/
+.pattern-bg__rays-wrap {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: max(1600px, 200vw);
-  height: max(1600px, 200vh);
-  translate: -50% -50%;
-  background: repeating-conic-gradient(
-    from 0deg,
-    rgba(137, 222, 102, 0.1) 0deg 4deg,
-    transparent 4deg 12deg
-  );
-  mask-image: radial-gradient(circle at center, black 0%, transparent 62%);
-  -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 62%);
-  opacity: 0.8;
+  width: max(1100px, 118vmax);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+}
+
+.pattern-bg__rays {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 50%;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 100% 100%;
+  will-change: transform;
+}
+
+/*
+  Side pattern bands: pulled outboard so they read as a quiet edge
+  treatment rather than a wall. Each clips a single copy of the artwork
+  that drifts slowly up or down.
+*/
+.pattern-bg .pattern-band {
+  position: absolute;
+  top: 50%;
+  width: var(--band-w);
+  height: var(--band-h);
+  transform: translateY(-50%);
+  background-image: url("../assets/2026/side-patterns.svg");
+  background-repeat: no-repeat;
+  /* The artwork at its true size and aspect -- 306.1 x 1260.84 is exactly
+     its 307:1261 ratio, so nothing is zoomed or squashed. */
+  background-position: center center;
+  background-size: 100% 100%;
+  opacity: 0.9;
+}
+
+.pattern-band--left {
+  left: calc(50% - var(--band-inner) - var(--band-w));
+}
+
+.pattern-band--right {
+  left: calc(50% + var(--band-inner));
+  /* Mirrored so the two edges read as a matched pair. */
+  transform: translateY(-50%) scaleX(-1);
+}
+
+/*
+  Below the design width the centre-anchored offset would push the bands
+  fully off-canvas, so they anchor to the viewport edges and keep the same
+  174px sliver showing.
+*/
+@media (max-width: 1400px) {
+  /* Exactly half the band inboard, so it keeps reading as half-in once the
+     centre-anchored 1092px spacing no longer fits. */
+  .pattern-band--left {
+    left: -153.05px;
+  }
+
+  .pattern-band--right {
+    left: auto;
+    right: -153.05px;
+  }
+}
+
+/*
+  Phone artwork: a single image carrying both columns, already positioned for
+  a narrow screen. Width tracks the viewport so those columns stay where they
+  were drawn, and it is centred vertically at full opacity.
+*/
+.pattern-bg__mobile {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/2026/side-patterns-mobile.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 100% auto;
+}
+
+@media (max-width: 900px) {
+  .pattern-bg .pattern-band {
+    display: none;
+  }
+
+  .pattern-bg__mobile {
+    display: block;
+  }
 }
 
 .pattern-bg__vignette {

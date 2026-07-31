@@ -11,6 +11,7 @@ export function AnnouncementBanner() {
       transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1], delay: 0.1 }}
     >
       <span className="announcement__cap" aria-hidden="true" />
+      <span className="announcement__cap" aria-hidden="true" />
       <div className="announcement__pill">
         <p>Join Africa's biggest Solana gathering</p>
         <a
@@ -22,6 +23,7 @@ export function AnnouncementBanner() {
           Register
         </a>
       </div>
+      <span className="announcement__cap" aria-hidden="true" />
       <span className="announcement__cap" aria-hidden="true" />
     </motion.header>
   );

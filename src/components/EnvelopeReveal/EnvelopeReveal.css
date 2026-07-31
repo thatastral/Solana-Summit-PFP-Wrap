@@ -1,0 +1,373 @@
+/**
+ * EnvelopeReveal
+ *
+ * Scoped with an `envr-` prefix and written in plain CSS with no framework
+ * dependency, so the component can be dropped into any React app as-is.
+ *
+ * Layout model: an inner `.envr-fit` box is exactly SCENE_W x SCENE_H pixels
+ * and carries a single `scale()`. Everything inside positions itself in those
+ * pixel coordinates, which are the artwork's real measurements. Resizing costs
+ * one composited transform.
+ */
+
+.envr-root {
+  --envr-green: #6ee557;
+  --envr-green-soft: #a6f78e;
+  --envr-glow: rgba(110, 229, 87, 0.55);
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  isolation: isolate;
+  /* Sensible default when the host doesn't pass a background. */
+  background: radial-gradient(120% 100% at 50% 12%, #10261a 0%, #071009 55%, #04070a 100%);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.envr-fit {
+  position: relative;
+  flex: none;
+  transform-origin: center center;
+  /* Gives the parallax tilt on .envr-scene something to project into. */
+  perspective: 1800px;
+}
+
+.envr-scene {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/* --- Ambient glow --------------------------------------------------------- */
+
+.envr-ambient {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 1180px;
+  height: 1180px;
+  margin: -590px 0 0 -590px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(110, 229, 87, 0.34) 0%,
+    rgba(110, 229, 87, 0.16) 32%,
+    rgba(110, 229, 87, 0.04) 55%,
+    rgba(110, 229, 87, 0) 70%
+  );
+  will-change: transform, opacity;
+}
+
+/* --- Envelope group ------------------------------------------------------- */
+
+.envr-envelope {
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
+}
+
+.envr-settle,
+.envr-float {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+/**
+ * Shared behaviour for the three artwork layers. Each is a window onto the
+ * same PNG at a different offset, which is how the flat source images become a
+ * back panel, a front pocket and a flap that can be layered around the card.
+ */
+.envr-layer {
+  position: absolute;
+  overflow: hidden;
+}
+
+.envr-layer img {
+  display: block;
+  position: relative;
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/**
+ * No shadows anywhere in this composition, by design.
+ *
+ * These layers are rectangular clip windows onto opaque artwork, so a
+ * drop-shadow traces the *window* rather than the envelope — it reads as a hard
+ * straight line across the design rather than as depth.
+ */
+.envr-back {
+  z-index: 1;
+}
+
+/* Sits above the pocket and below the flap. */
+.envr-sealed {
+  z-index: 4;
+  will-change: opacity;
+}
+
+.envr-pocket {
+  z-index: 3;
+}
+
+/* --- Flap ----------------------------------------------------------------- */
+
+.envr-flap {
+  /* The fold. Everything about the opening motion hinges on this line. */
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  overflow: visible;
+  will-change: transform;
+}
+
+.envr-flap-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.envr-flap-face img {
+  display: block;
+  position: relative;
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/**
+ * The outside of the flap. Rotating the face 180deg about its own centre maps
+ * the closed artwork's base row onto the hinge and its apex onto the top of
+ * the box — the exact mirror of the lining, so the two faces line up edge for
+ * edge as the flap turns.
+ */
+.envr-flap-outside {
+  transform: rotateX(180deg);
+  /**
+   * The face is turned about its own centre, so its local top edge is the
+   * flap's base — which becomes the top edge of the envelope once the flap is
+   * folded down. Rounding it here gives the closed envelope its corner radius;
+   * the back panel animates to the same radius to meet it. The lining is left
+   * square, because when the flap is raised that same edge is an internal fold.
+   *
+   * The vertical radius is pre-stretched (42 / 0.764 = 55) because the flap is
+   * scaled down vertically while shut. After that squash it lands back on a
+   * circular 42px, matching the back panel's corners exactly — otherwise the
+   * two radii disagree and leave a bright notch at each corner.
+   */
+  border-radius: 42px 42px 0 0 / 55px 55px 0 0;
+}
+
+/* Light falloff across the lining as the flap swings. */
+.envr-flap-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(2, 12, 4, 0.9) 0%,
+    rgba(2, 12, 4, 0.45) 55%,
+    rgba(2, 12, 4, 0.12) 100%
+  );
+}
+
+/* --- Card ----------------------------------------------------------------- */
+
+.envr-card-clip {
+  z-index: 2;
+  /* Matches the envelope artwork's bottom corners so the card can't show
+     through where the envelope curves away. */
+  border-bottom-left-radius: 44px;
+  border-bottom-right-radius: 44px;
+}
+
+.envr-card {
+  position: absolute;
+  transform-origin: 50% 90%;
+  will-change: transform;
+}
+
+.envr-card-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.envr-card-placeholder {
+  width: 100%;
+  aspect-ratio: 7 / 5;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #12314a 0%, #0b2135 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.envr-card-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0) 62%
+  );
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+/* --- Wrapped PFP ---------------------------------------------------------- */
+
+.envr-pfp-anchor {
+  position: absolute;
+  z-index: 7;
+  will-change: transform, opacity;
+}
+
+.envr-pfp-float {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.envr-pfp-glow {
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(166, 247, 142, 0.5) 0%,
+    rgba(110, 229, 87, 0.28) 42%,
+    rgba(110, 229, 87, 0) 70%
+  );
+  will-change: transform, opacity;
+}
+
+.envr-pfp-img,
+.envr-pfp-placeholder {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  /* Ring and glow only — no cast shadow. */
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.9),
+    0 0 34px rgba(110, 229, 87, 0.45);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.envr-pfp-placeholder {
+  background: linear-gradient(150deg, #cfe9ff 0%, #9fc9ea 100%);
+}
+
+/* --- Caption -------------------------------------------------------------- */
+
+.envr-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.envr-caption-name {
+  font-size: clamp(18px, 2.4vw, 28px);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: #f4fff0;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
+}
+
+.envr-caption-role {
+  font-size: clamp(11px, 1.3vw, 14px);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--envr-green-soft);
+}
+
+/* --- Replay --------------------------------------------------------------- */
+
+.envr-replay {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(166, 247, 142, 0.35);
+  background: rgba(8, 22, 12, 0.62);
+  backdrop-filter: blur(10px);
+  color: var(--envr-green-soft);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 550;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.envr-replay:hover {
+  background: rgba(14, 40, 20, 0.8);
+  border-color: rgba(166, 247, 142, 0.6);
+}
+
+.envr-replay:active {
+  transform: scale(0.96);
+}
+
+.envr-replay:focus-visible {
+  outline: 2px solid var(--envr-green);
+  outline-offset: 3px;
+}
+
+/* --- Utility -------------------------------------------------------------- */
+
+.envr-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/**
+ * The component already swaps to a static composition when reduced motion is
+ * requested; this stops the two ambient loops as well, since they are driven by
+ * repeating keyframes rather than by the stage timeline.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .envr-float,
+  .envr-pfp-float,
+  .envr-card-sheen {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,120 @@
+/*
+  Squircle frame -- rounded, but deliberately not a full circle, matching
+  the reference. 8% white fill.
+
+  Positioned top-right, vertically centred against the announcement frame
+  and held 36px clear of the right side pattern. Above 1400 the bands are
+  centre-anchored (inner edge = 50vw + 546px), so the offset tracks that.
+*/
+.music-toggle {
+  position: fixed;
+  top: calc(var(--space-block) + (var(--banner-h) / 2) - 26px);
+  /* 36px inboard of the right pattern's inner edge (50vw + 546px). */
+  right: max(20px, calc(50vw - var(--band-inner) + 36px));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 38%;
+  background: rgba(255, 255, 255, 0.08);
+  transition: background-color var(--dur-base) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+
+/* Below 1400 the bands anchor to the viewport edges, leaving a fixed
+   174px sliver -- so the 36px clearance becomes a fixed offset too. */
+@media (max-width: 1400px) {
+  .music-toggle {
+    right: 210px;
+  }
+}
+
+.music-toggle:active {
+  transform: scale(0.94);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .music-toggle:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+}
+
+.music-toggle__bars {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 22px;
+}
+
+.music-toggle__bar {
+  display: block;
+  width: 2.5px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--color-white);
+  transform-origin: center;
+}
+
+/* Struck through when muted. */
+.music-toggle__slash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-white);
+  transform: translate(-50%, -50%) rotate(-45deg) scaleX(0);
+  transform-origin: center;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.music-toggle.is-muted .music-toggle__slash {
+  transform: translate(-50%, -50%) rotate(-45deg) scaleX(1);
+}
+
+.music-toggle.is-muted .music-toggle__bar {
+  opacity: 0.55;
+}
+
+@media (max-width: 900px) {
+  /* Patterns are faint and space is tight here -- tuck it to the edge
+     rather than holding the 36px pattern offset. */
+  .music-toggle {
+    right: clamp(14px, 4vw, 40px);
+  }
+}
+
+/*
+  On a phone the announcement pill spans almost the full width, so a control
+  on that row would sit on top of the Register button. It moves to the
+  bottom-right instead -- clear of the centred footer credit.
+*/
+@media (max-width: 700px) {
+  .music-toggle {
+    top: auto;
+    bottom: clamp(16px, 3vh, 30px);
+    right: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Size only -- the bottom-right placement from the rule above stands. */
+  .music-toggle {
+    width: 46px;
+    height: 46px;
+  }
+
+  .music-toggle__bars {
+    height: 19px;
+  }
+
+  .music-toggle__bar {
+    height: 19px;
+  }
+}
