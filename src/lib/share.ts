@@ -3,15 +3,19 @@ import { REGISTER_URL } from "../config";
 /**
  * Saving and sharing the generated assets.
  *
- * Both actions do exactly what their label says on every device: Download
- * saves the files, Share on X opens X. Neither ever raises the operating
- * system's share sheet.
+ * The two buttons take deliberately different routes, because they are asking
+ * for different things:
  *
- * An earlier version routed mobile through `navigator.share`, because on iOS
- * that is the only route that lands a picture in Photos rather than Files.
- * It was the wrong trade: tapping "Download" and getting a sheet asking where
- * to send things is a different action from the one the button offered, and
- * dismissing it left the user with nothing. Predictable beats convenient.
+ * - **Download** always saves the files directly, on every device. It never
+ *   raises the share sheet. Tapping "Download" and being asked where to
+ *   *send* things is a different action from the one the button offered, and
+ *   dismissing that sheet used to leave the user with nothing at all.
+ *
+ * - **Share on X** does raise the sheet, on mobile only, and that is the
+ *   point: X's web intent carries text and a URL but cannot carry an image,
+ *   so handing the card to the OS is the one route that gets the picture into
+ *   the post. Desktop has no such sheet, so it falls back to opening the
+ *   composer with the copy filled in and saving the card to attach.
  */
 
 const SITE_URL =
@@ -38,6 +42,41 @@ function anchorDownload(blobUrl: string, filename: string) {
   document.body.appendChild(link);
   link.click();
   link.remove();
+}
+
+function dataUrlToFile(dataUrl: string, filename: string): File {
+  const [header, encoded] = dataUrl.split(",");
+  const mime = /:(.*?);/.exec(header)?.[1] ?? "image/png";
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new File([bytes], filename, { type: mime });
+}
+
+/** True when the browser can share actual image files, not just links. */
+function canShareFiles(files: File[]): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    typeof navigator.canShare === "function" &&
+    typeof navigator.share === "function" &&
+    navigator.canShare({ files })
+  );
+}
+
+/**
+ * Whether the share sheet is the right answer, rather than merely available.
+ *
+ * Only phones and tablets. macOS browsers advertise file sharing too, but a
+ * desktop share sheet is a poor way to post to X compared with the composer
+ * opening in a tab, so desktop takes the intent route regardless.
+ */
+function isTouchDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    // iPadOS 13+ reports as a Mac; the touch check separates it from a desktop.
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return isIOS || (window.matchMedia?.("(pointer: coarse)").matches ?? false);
 }
 
 function dataUrlToBlobUrl(dataUrl: string): string {
@@ -75,13 +114,36 @@ export function saveAssets({ pfpDataUrl, cardDataUrl }: SummitAssets): void {
 }
 
 /**
- * Opens X with the copy pre-filled, and saves the card alongside it.
+ * Posts the card to X.
  *
- * X's web intent carries text and a URL only -- it cannot take an image, and
- * nothing in the browser can attach one to it. So the card is saved at the
- * same time, ready to attach in one tap once the composer is open.
+ * On a phone the OS share sheet is used and the card goes with it, so
+ * choosing X there opens the composer with the image already attached --
+ * the only way to get a picture into the post, since X's web intent takes
+ * text and a URL and nothing else.
+ *
+ * Everywhere else the composer opens in a tab with the copy filled in and
+ * the card is saved alongside, ready to attach in one click.
  */
 export function shareToX({ cardDataUrl }: SummitAssets): void {
+  if (isTouchDevice()) {
+    const card = dataUrlToFile(cardDataUrl, "solana-summit-nigeria-attending-card.png");
+    if (canShareFiles([card])) {
+      navigator
+        .share({ files: [card], text: `${SHARE_TEXT}\n${SITE_URL}` })
+        .catch((error: DOMException) => {
+          // Dismissing the sheet is a decision, not a failure -- doing
+          // anything after it would be acting against the user. Any other
+          // error means the sheet never worked, so fall back to the composer.
+          if (error?.name !== "AbortError") openComposerAndSaveCard(cardDataUrl);
+        });
+      return;
+    }
+  }
+
+  openComposerAndSaveCard(cardDataUrl);
+}
+
+function openComposerAndSaveCard(cardDataUrl: string) {
   /*
     Opened first and synchronously. Popup blockers judge a window by how
     directly it follows the click, so anything slower in front of it -- like

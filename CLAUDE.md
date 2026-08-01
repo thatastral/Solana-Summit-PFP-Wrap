@@ -77,11 +77,14 @@ Recurring gotcha: Motion writes these inline, which silently overrides CSS. Cent
 
 ### Saving and sharing
 
-`src/lib/share.ts`. Both actions do literally what their label says on every device — Download saves the files, Share on X opens X — and **neither ever raises the OS share sheet.** An earlier version routed mobile through `navigator.share`, because on iOS that is the only route that lands a picture in Photos rather than Files; it was reverted deliberately. Tapping "Download" and getting a sheet asking where to *send* things is a different action from the one the button offered, and dismissing it left the user with nothing. Don't reintroduce it without being asked.
+`src/lib/share.ts`. The two buttons take deliberately different routes, and the split is the whole design — don't unify them.
+
+- **Download never raises the share sheet, on any device.** It always saves the files directly. An earlier version routed mobile through `navigator.share`; tapping "Download" and being asked where to *send* things is a different action from the one the button offered, and dismissing that sheet left the user with nothing at all.
+- **Share on X raises the sheet on touch devices, and that is the point.** X's web intent carries text and a URL but *cannot* carry an image, so handing the card to the OS is the only route that gets the picture into the post. Desktop has no useful sheet, so it opens the composer in a tab and saves the card to attach. A dismissed sheet (`AbortError`) does nothing further — that's a decision, not a failure; any other error falls back to the composer.
 
 Two consequences to preserve:
 
-- The handlers in `App.tsx` are **synchronous** up to the point a file is saved or a window opened. An `await` in front of either puts the request outside the click that triggered it, and both popup blocking and download blocking are judged on that. This is also why `shareToX` calls `window.open` *before* decoding the card.
+- The handlers in `App.tsx` are **synchronous** up to the point a file is saved, a sheet raised, or a window opened. An `await` in front of any of them puts the request outside the click that triggered it, and popup blocking, download blocking and `navigator.share`'s transient-activation requirement are all judged on that. This is also why the desktop path calls `window.open` *before* decoding the card.
 - Saves go through blob URLs, not the raw data URLs. A 2160px PNG is several megabytes of base64, and Safari treats a large `data:` navigation as something it can quietly drop.
 
 On iOS these land in Files → Downloads rather than Photos, and Safari is stricter about honouring more than one programmatic download per gesture — if only one file arrives on a real iPhone, that is the cause.
