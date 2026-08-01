@@ -11,6 +11,7 @@ interface ResultRevealProps {
   userName: string;
   userRole: string;
   onDownloadBoth: () => void;
+  onShareToX: () => void;
   onReset: () => void;
 }
 
@@ -22,6 +23,7 @@ export function ResultReveal({
   userName,
   userRole,
   onDownloadBoth,
+  onShareToX,
   onReset,
 }: ResultRevealProps) {
   // The actions hold back until the envelope has finished playing, so the
@@ -138,9 +140,30 @@ export function ResultReveal({
         style={{ pointerEvents: revealed ? "auto" : "none" }}
         aria-hidden={!revealed}
       >
-        <button type="button" className="btn btn-primary" onClick={onDownloadBoth} data-sound="success">
-          Download
-        </button>
+        <div className="result__buttons">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onDownloadBoth}
+            data-sound="success"
+          >
+            Download
+          </button>
+          <button
+            type="button"
+            className="btn result__share"
+            onClick={onShareToX}
+            data-sound="select"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+              />
+            </svg>
+            Share on X
+          </button>
+        </div>
         <button type="button" className="result__reset" onClick={onReset} ref={resetRef}>
           Create Another
         </button>

@@ -129,12 +129,20 @@ const cardSeated = {
   transformPerspective: 1200,
 };
 
+/*
+  Held at zero opacity until the flap starts to lift. Geometrically the card
+  is already covered while the envelope is sealed, but the entrance spins the
+  whole group in 3D and a sub-pixel edge can catch the light at some angles.
+  The switch happens on the first frame of `opening`, when the flap is still
+  fully shut, so it is never seen turning on.
+*/
 const cardVariants = {
-  idle: cardSeated,
-  entrance: cardSeated,
-  opening: cardSeated,
+  idle: { ...cardSeated, opacity: 0 },
+  entrance: { ...cardSeated, opacity: 0 },
+  opening: { ...cardSeated, opacity: 1, transition: { opacity: { duration: 0 } } },
   card: {
     y: 0,
+    opacity: 1,
     scale: 1,
     transformPerspective: 1200,
     rotate: 0,
@@ -148,6 +156,7 @@ const cardVariants = {
   },
   focus: {
     y: -18,
+    opacity: 1,
     scale: 1.06,
     rotate: 0,
     rotateX: 6,
@@ -400,7 +409,15 @@ const EnvelopeReveal = forwardRef(function EnvelopeReveal(
   // -- Derived flags ---------------------------------------------------------
 
   const envelopeStage = atLeast('entrance') ? 'entrance' : 'idle';
-  const cardStage = atLeast('focus') ? 'focus' : atLeast('card') ? 'card' : 'opening';
+  // Falls back to `entrance` rather than `opening` before the flap moves, so
+  // the card's hidden pose actually applies while the envelope is sealed.
+  const cardStage = atLeast('focus')
+    ? 'focus'
+    : atLeast('card')
+      ? 'card'
+      : atLeast('opening')
+        ? 'opening'
+        : 'entrance';
   const pfpStage = atLeast('pfp') ? 'pfp' : 'idle';
   const settled = atLeast('focus');
 

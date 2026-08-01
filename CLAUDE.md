@@ -14,7 +14,7 @@ npx tsc --noEmit       # type-check (build does not run tsc; do this separately)
 
 There is no test suite and no lint script configured.
 
-The Supabase edge function under `src/supabase/functions/server/` is **not** built or served by Vite — it's Deno code deployed separately via the Supabase CLI (`supabase functions deploy`). `tsconfig.json` excludes `src/supabase` for this reason (it uses Deno globals and `npm:`/`jsr:` specifiers that don't resolve under the frontend's Node/browser TS config).
+The Supabase edge function under `supabase/functions/make-server-07da931a/` is **not** built or served by Vite — it's Deno code deployed separately via the Supabase CLI (`supabase functions deploy`). `tsconfig.json` excludes `supabase` for this reason (it uses Deno globals and `npm:`/`jsr:` specifiers that don't resolve under the frontend's Node/browser TS config).
 
 ## Branches
 
@@ -77,9 +77,21 @@ Recurring gotcha: Motion writes these inline, which silently overrides CSS. Cent
 
 ### Backend
 
-`src/supabase/functions/server/index.tsx` is a Hono app on Supabase Edge Functions backing `frames/count`, `frames/recent` and `frames/increment` via the KV helper in `kv_store.tsx`. Keys are prefixed `summit2026_*`, kept separate from the 2025 app's `frame_download_count` so both versions can share a Supabase project. `frames/increment` also appends to a capped gallery array — sized larger than the "recent" endpoint serves, kept as storage for a not-yet-built mosaic feature.
+`supabase/functions/make-server-07da931a/index.ts` is a Hono app on Supabase Edge Functions, and the only server the site has — image generation is entirely client-side. It backs `frames/feed` (the combined endpoint the site polls), `frames/count` and `frames/recent` (kept so a cached older bundle keeps working), and `frames/increment`. It talks to the `kv_store_07da931a` table directly. Keys are prefixed `summit2026_*`, kept separate from the 2025 app's `frame_download_count` so both versions can share a Supabase project.
 
-The counter and the faces strip poll once a second. `IS_PRODUCTION` in `src/config.ts` gates reporting so local and preview runs never inflate the public count.
+**Nothing is stored that could instead be derived.** A download writes exactly one row — its own thumbnail, under a unique `summit2026_thumb_<ms>_<uuid>` key. The total is a `COUNT` over those rows and the faces strip is the newest few of the same rows. An earlier version kept the count and the strip as their own stored values, which meant read-modify-write: five simultaneous downloads produced a count of one and a strip missing four faces. Deriving both makes them exact under concurrency and keeps them consistent with each other. Don't reintroduce a stored counter — the cost of the `COUNT` is what CDN caching is there to absorb.
+
+`frames/increment` validates that the posted thumbnail is a small, genuine `data:image/...;base64` raster and rejects anything else with a 400. This matters because the endpoint is reachable by anyone (the anon key that authorises it necessarily ships in the bundle) and what it stores is displayed publicly on the landing page. It bounds the damage to "someone posted a picture"; it cannot judge whether a real photo is an appropriate one. **There is no moderation and no admin UI** — removing a bad entry means deleting its row:
+
+```sql
+delete from kv_store_07da931a where key like 'summit2026_thumb_%' order by key desc limit 1;
+-- or wipe everything and start from zero:
+delete from kv_store_07da931a where key like 'summit2026_%';
+```
+
+Reads are the hot path, so `frames/feed` sets `s-maxage` and most polls never reach Postgres. The client polls every 12–16s (jittered, so a thousand tabs opened together don't fire on the same tick) and pauses entirely while the tab is hidden. `fetchFeed()` returns `null` rather than zeroes when a read fails, so a dropped connection leaves the last known figures on screen instead of flashing "0 attending".
+
+`IS_PRODUCTION` in `src/config.ts` gates reporting so local and preview runs never inflate the public count. A download is only reported once per generated identity, claimed synchronously via a ref before the await.
 
 ### Brand assets
 

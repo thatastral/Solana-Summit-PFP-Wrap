@@ -96,6 +96,9 @@
 */
 .result__stage .envr-card-img {
   filter: drop-shadow(0 12px 22px rgba(0, 14, 20, 0.42));
+  /* Square, matching the exported asset -- the component's default radius
+     would round only the on-screen copy. */
+  border-radius: 0;
 }
 
 /*
@@ -141,11 +144,39 @@
   margin-top: 16px;
 }
 
+.result__buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Secondary next to the solid primary: outlined, same height and rhythm. */
+.btn.result__share {
+  gap: 9px;
+  background: transparent;
+  color: var(--color-white);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.btn.result__share svg {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn.result__share:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
 /* Body face here rather than the display serif the shared .btn defaults to. */
 .result__actions .btn {
   font-family: var(--font-body);
   font-weight: 500;
   font-size: 18px;
+  height: 48px;
 }
 
 .result__reset {
@@ -242,8 +273,12 @@
 @media (max-width: 560px) {
   .result__actions .btn {
     height: 40px;
-    font-size: 15px;
-    padding: 0 24px;
+    font-size: 14px;
+    padding: 0 18px;
+  }
+
+  .result__buttons {
+    gap: 8px;
   }
 
   .result__stage {

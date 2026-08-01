@@ -16,9 +16,10 @@ import { detectFocalPoint, loadImage, type FocalPoint } from "./lib/faceCrop";
 import { generatePfp } from "./lib/pfpGenerator";
 import { generateAttendeeCard } from "./lib/attendeeCardGenerator";
 import { resizeThumbnail } from "./lib/thumbnail";
-import { fetchFeed, reportGenerated } from "./lib/api";
+import { fetchFeed, nextPollDelay, reportGenerated } from "./lib/api";
 import { IS_PRODUCTION } from "./config";
 import { playUiSound, unlockUiSounds } from "./lib/uiSounds";
+import { saveAssets, shareToX } from "./lib/share";
 
 type Stage = "intro" | "landing" | "details" | "generating" | "result";
 
@@ -30,13 +31,6 @@ function decodeImage(src: string): Promise<void> {
     img.src = src;
     img.decode?.().then(resolve, () => {});
   });
-}
-
-function downloadDataUrl(dataUrl: string, filename: string) {
-  const link = document.createElement("a");
-  link.href = dataUrl;
-  link.download = filename;
-  link.click();
 }
 
 // Minimum time each generation step stays on screen. Long enough to read
@@ -92,22 +86,49 @@ export default function App() {
     };
   }, []);
 
-  // Poll every second so the counter and the "Faces of Solana Summit
-  // Nigeria" strip stay live as other people generate their assets.
+  /*
+    Keeps the counter and the faces strip live.
+
+    Self-scheduling rather than setInterval: each poll waits for the previous
+    response before booking the next, so a slow network can never stack up a
+    backlog of in-flight requests. It also stands down entirely while the tab
+    is hidden -- a background tab has nobody watching the number, and on a
+    launch day that is most of the open tabs -- and refreshes immediately on
+    the way back so the first thing seen is current.
+  */
   useEffect(() => {
     let cancelled = false;
+    let timer: number | undefined;
 
-    const load = () => {
-      fetchFeed().then((next) => {
-        if (!cancelled) setFeed(next);
-      });
+    const schedule = () => {
+      if (cancelled || document.hidden) return;
+      timer = window.setTimeout(run, nextPollDelay());
     };
 
-    load();
-    const timer = setInterval(load, 1000);
+    const run = async () => {
+      if (cancelled || document.hidden) return;
+      const next = await fetchFeed();
+      if (cancelled) return;
+      // `null` means the read failed -- keep whatever is already on screen
+      // rather than blanking the counter and the strip.
+      if (next) setFeed(next);
+      schedule();
+    };
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        window.clearTimeout(timer);
+      } else {
+        void run();
+      }
+    };
+
+    void run();
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
@@ -139,6 +160,7 @@ export default function App() {
     setPfpDataUrl(null);
     setCardDataUrl(null);
     setGenStep(0);
+    reported.current = false;
     setStage("landing");
   };
 
@@ -165,23 +187,46 @@ export default function App() {
     await Promise.all([pfp, card].map(decodeImage));
 
     setStage("result");
+  };
+
+  /*
+    Counted on download, not on generate. Someone who generates and walks
+    away hasn't claimed a spot -- taking the assets is the moment that
+    counts, so that is what adds their face to the strip and moves the
+    counter. `reported` keeps a second download from counting twice.
+  */
+  const reported = useRef(false);
+
+  const reportDownload = async () => {
+    if (reported.current || !pfpDataUrl) return;
+    // Claimed synchronously: two fast clicks would otherwise both pass the
+    // check before either had finished awaiting.
+    reported.current = true;
 
     // Local/preview runs must not inflate the public counter or gallery.
     if (!IS_PRODUCTION) return;
 
     try {
-      const thumbnail = await resizeThumbnail(pfp);
+      const thumbnail = await resizeThumbnail(pfpDataUrl);
       const updated = await reportGenerated(thumbnail);
       setFeed(updated);
     } catch (error) {
       console.log("Failed to report generated identity:", error);
+      reported.current = false; // let a retry through
     }
   };
 
-  const handleDownloadBoth = () => {
+  const handleDownloadBoth = async () => {
     if (!pfpDataUrl || !cardDataUrl) return;
-    downloadDataUrl(pfpDataUrl, "solana-summit-nigeria-pfp.png");
-    setTimeout(() => downloadDataUrl(cardDataUrl, "solana-summit-nigeria-attending-card.png"), 250);
+    const saved = await saveAssets({ pfpDataUrl, cardDataUrl });
+    // A dismissed share sheet isn't a claimed spot, so it isn't counted.
+    if (saved) void reportDownload();
+  };
+
+  const handleShareToX = async () => {
+    if (!pfpDataUrl || !cardDataUrl) return;
+    await shareToX({ pfpDataUrl, cardDataUrl });
+    void reportDownload();
   };
 
   return (
@@ -227,6 +272,7 @@ export default function App() {
                   userName={name.trim()}
                   userRole={role.trim()}
                   onDownloadBoth={handleDownloadBoth}
+                  onShareToX={handleShareToX}
                   onReset={resetFlow}
                 />
               )}

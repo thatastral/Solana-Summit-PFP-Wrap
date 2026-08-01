@@ -5,3 +5,6 @@ dist
 *.local
 .env
 .env.local
+.vercel
+.env*
+supabase/.temp

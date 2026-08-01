@@ -18,9 +18,14 @@ const ROLE_BASELINE = 0.8238;
 const NAME_FONT = 0.056;
 const ROLE_FONT = 0.04;
 
-/* Matches the rounded corners already cut into the background artwork, so the
-   clip follows its silhouette instead of squaring it off or leaving a fringe. */
-const CARD_RADIUS = 0.033;
+/*
+  The source artwork has rounded, transparent corners. The card exports with
+  square corners and no transparency, so a slightly oversized copy is drawn
+  underneath first: at the canvas corners that copy is opaque, filling what
+  the rounded cut leaves behind with the right hue (teal at the top, green
+  where the Superteam bar runs). 1.5% clears the corner radius comfortably.
+*/
+const CORNER_BLEED = 0.015;
 
 function roundRectPath(
   ctx: CanvasRenderingContext2D,
@@ -62,11 +67,8 @@ export async function generateAttendeeCard({
   await document.fonts.ready;
   const background = await loadImage(cardBgUrl);
 
-  const radius = SIZE * CARD_RADIUS;
-
-  ctx.save();
-  roundRectPath(ctx, 0, 0, SIZE, SIZE, radius);
-  ctx.clip();
+  const bleed = SIZE * CORNER_BLEED;
+  ctx.drawImage(background, -bleed, -bleed, SIZE + bleed * 2, SIZE + bleed * 2);
   ctx.drawImage(background, 0, 0, SIZE, SIZE);
 
   // Photo: rounded square, centred, cropped around the detected face.
@@ -104,8 +106,6 @@ export async function generateAttendeeCard({
     ctx.fillStyle = "rgba(203, 255, 246, 0.88)";
     ctx.fillText(role.trim(), SIZE / 2, SIZE * ROLE_BASELINE);
   }
-
-  ctx.restore(); // end card clip
 
   /* No outline baked in -- the border is a presentation detail applied on
      screen, so the downloaded asset stays clean and reusable. */

@@ -52,50 +52,50 @@
 }
 
 /*
-  Side pattern bands: pulled outboard so they read as a quiet edge
-  treatment rather than a wall. Each clips a single copy of the artwork
-  that drifts slowly up or down.
+  Side pattern bands.
+
+  Each band spans from its viewport edge in to the 1092px centre gap and
+  tiles the artwork horizontally *outward* from that gap. The tile nearest
+  the gap is anchored to the inner edge, so at the 1440 design width the
+  visible sliver is pixel-identical to a single fixed 306.1px band -- while
+  on wider screens further tiles carry the pattern out to the edge instead
+  of leaving a dead margin.
 */
 .pattern-bg .pattern-band {
   position: absolute;
   top: 50%;
-  width: var(--band-w);
   height: var(--band-h);
   transform: translateY(-50%);
   background-image: url("../assets/2026/side-patterns.svg");
-  background-repeat: no-repeat;
-  /* The artwork at its true size and aspect -- 306.1 x 1260.84 is exactly
-     its 307:1261 ratio, so nothing is zoomed or squashed. */
-  background-position: center center;
-  background-size: 100% 100%;
+  background-repeat: repeat-x;
+  /* True size and aspect -- 306.1 x 1260.84 is exactly the artwork's
+     307:1261 ratio, so nothing is zoomed or squashed. */
+  background-size: var(--band-w) 100%;
   opacity: 0.9;
 }
 
 .pattern-band--left {
-  left: calc(50% - var(--band-inner) - var(--band-w));
+  left: 0;
+  right: calc(50% + var(--band-inner));
+  /* Anchored at the gap, tiling away toward the left edge. */
+  background-position: right center;
 }
 
 .pattern-band--right {
   left: calc(50% + var(--band-inner));
+  right: 0;
+  background-position: left center;
   /* Mirrored so the two edges read as a matched pair. */
   transform: translateY(-50%) scaleX(-1);
 }
 
 /*
-  Below the design width the centre-anchored offset would push the bands
-  fully off-canvas, so they anchor to the viewport edges and keep the same
-  174px sliver showing.
+  Below the design width the 1092px gap no longer fits, so the inner edges
+  pull in to leave exactly half a band showing on each side.
 */
 @media (max-width: 1400px) {
-  /* Exactly half the band inboard, so it keeps reading as half-in once the
-     centre-anchored 1092px spacing no longer fits. */
-  .pattern-band--left {
-    left: -153.05px;
-  }
-
-  .pattern-band--right {
-    left: auto;
-    right: -153.05px;
+  .pattern-bg .pattern-band {
+    --band-inner: calc(50vw - 153.05px);
   }
 }
 
