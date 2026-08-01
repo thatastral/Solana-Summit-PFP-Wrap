@@ -216,16 +216,21 @@ export default function App() {
     }
   };
 
-  const handleDownloadBoth = async () => {
+  /*
+    Both handlers stay synchronous up to the point the browser is asked to
+    save a file or open a window. An `await` in front of either would put the
+    request outside the click that triggered it, and popup and download
+    blocking are both judged on that.
+  */
+  const handleDownloadBoth = () => {
     if (!pfpDataUrl || !cardDataUrl) return;
-    const saved = await saveAssets({ pfpDataUrl, cardDataUrl });
-    // A dismissed share sheet isn't a claimed spot, so it isn't counted.
-    if (saved) void reportDownload();
+    saveAssets({ pfpDataUrl, cardDataUrl });
+    void reportDownload();
   };
 
-  const handleShareToX = async () => {
+  const handleShareToX = () => {
     if (!pfpDataUrl || !cardDataUrl) return;
-    await shareToX({ pfpDataUrl, cardDataUrl });
+    shareToX({ pfpDataUrl, cardDataUrl });
     void reportDownload();
   };
 

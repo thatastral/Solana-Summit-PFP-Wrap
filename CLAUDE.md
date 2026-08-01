@@ -75,6 +75,17 @@ Two independent layers:
 
 Recurring gotcha: Motion writes these inline, which silently overrides CSS. Centring translates, resting opacity and similar must be set **in the animation target**, or moved onto a non-animated wrapper. This has caused real bugs in the ray burst, the modal opacity and the mobile faces strip — check here first when a transform "doesn't apply".
 
+### Saving and sharing
+
+`src/lib/share.ts`. Both actions do literally what their label says on every device — Download saves the files, Share on X opens X — and **neither ever raises the OS share sheet.** An earlier version routed mobile through `navigator.share`, because on iOS that is the only route that lands a picture in Photos rather than Files; it was reverted deliberately. Tapping "Download" and getting a sheet asking where to *send* things is a different action from the one the button offered, and dismissing it left the user with nothing. Don't reintroduce it without being asked.
+
+Two consequences to preserve:
+
+- The handlers in `App.tsx` are **synchronous** up to the point a file is saved or a window opened. An `await` in front of either puts the request outside the click that triggered it, and both popup blocking and download blocking are judged on that. This is also why `shareToX` calls `window.open` *before* decoding the card.
+- Saves go through blob URLs, not the raw data URLs. A 2160px PNG is several megabytes of base64, and Safari treats a large `data:` navigation as something it can quietly drop.
+
+On iOS these land in Files → Downloads rather than Photos, and Safari is stricter about honouring more than one programmatic download per gesture — if only one file arrives on a real iPhone, that is the cause.
+
 ### Backend
 
 `supabase/functions/make-server-07da931a/index.ts` is a Hono app on Supabase Edge Functions, and the only server the site has — image generation is entirely client-side. It backs `frames/feed` (the combined endpoint the site polls), `frames/count` and `frames/recent` (kept so a cached older bundle keeps working), and `frames/increment`. It talks to the `kv_store_07da931a` table directly. Keys are prefixed `summit2026_*`, kept separate from the 2025 app's `frame_download_count` so both versions can share a Supabase project.
