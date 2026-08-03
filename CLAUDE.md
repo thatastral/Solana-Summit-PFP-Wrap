@@ -45,7 +45,16 @@ The experience is a **fixed single fold on every device — nothing ever scrolls
 Two independent async functions in `src/lib/` each build an offscreen `<canvas>` and return a `data:image/png` URL. Nothing is rendered server-side.
 
 - `pfpGenerator.ts` — the circular PFP at 1080². Fill circle → cover-fit-clip the photo across the whole circle → `drawImage` the pre-made wrap overlay (`pfp-wrap.png`, scaled 1.335× so the ring meets the circumference, LinkedIn "#Hiring" style) → multiply-blend inner shadow. The ring is **always a pre-rendered image composited on top**, never text-on-a-path computed at runtime — an earlier per-glyph rotation approach had orientation bugs (`src/lib/canvasText.ts` survives but is unused by this path).
-- `attendeeCardGenerator.ts` — the card at 2160², composited over `attendee-card-bg.webp`, which already carries the logo, headline, side patterns and Superteam bar. Only the photo, name and role are drawn on top, at fractions of the canvas measured from the approved reference.
+- `attendeeCardGenerator.ts` — the card at **1080²**, composited over `attendee-card-bg.webp`, which already carries the logo, headline, side patterns and Superteam bar. Only the photo, name and role are drawn on top, at fractions of the canvas measured from the approved reference. The export matches the background artwork's own resolution deliberately: drawing 1:1 is the only way the baked-in headline and logo stay sharp, and rendering at 2160 would mean upscaling them. If a 2160 background is ever supplied, change `SIZE` alone — every placement is a fraction.
+
+  Placements were **fitted against the reference export, not eyeballed**: candidates were rendered and scored pixel-by-pixel until they matched. Two results worth keeping:
+
+  - The type is **53.5px / 34.5px**, though the design reports 56 / 36. Both are 95.7% of nominal — the same ratio for each — which is what a Figma text layer resized by dragging looks like: it keeps its nominal size and draws scaled. The photo, by contrast, is exactly its stated 450px. Setting 56/36 draws visibly larger than the approved artwork.
+  - Name and role are the **same colour**; the role is not dimmed, only smaller.
+
+  `document.fonts.load()` is called for both sizes before drawing. `document.fonts.ready` alone is not enough and fails silently — it resolves once *pending* loads finish, and a face nothing has requested yet is not pending. Canvas never triggers a webfont load by itself; assigning `ctx.font` for an unloaded family just falls back to Times with no error. In practice the DOM had already loaded Calendas Plus by the time anyone generated a card, so this is a race that was being won rather than a bug in the output — but it was a race.
+
+The card artwork has **square** corners with a 1px antialiased edge (not the rounded corners the previous version had). An oversized copy is drawn underneath, pushed out 3px so its own translucent ring falls outside the canvas — 1px is not enough, the ring lands back on the corner once resampled and leaves alpha at 253 instead of 255.
 
 **Exports are deliberately borderless.** The white strokes on the card and PFP are presentation-only, applied in `ResultReveal.css` via `outline` so downloads stay clean and reusable. Note `outline`, not an inset `box-shadow` — on a replaced element like `<img>` the image content paints over an inset shadow and it never shows.
 
